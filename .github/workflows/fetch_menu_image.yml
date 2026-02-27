@@ -1,0 +1,49 @@
+name: Fetch and Save Menu Image
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 매일 오전 9시(한국) = 0시(UTC)
+  workflow_dispatch:
+
+jobs:
+  fetch-menu-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium requests webdriver-manager
+      - name: Fetch menu image
+        run: python fetch_menu_image.py
+      - name: Commit and push image
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add public/*.jpg || true
+          git commit -m "chore: update menu image" || echo "No changes to commit"
+          git push
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: Build site (npm run build)
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist

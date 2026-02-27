@@ -1,0 +1,16 @@
+ .header {
+  width: 100%;
+  background: #f28482;
+  color: #fff;
+  padding: 0.28rem 0 0.22rem 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  cursor: pointer;
+}
