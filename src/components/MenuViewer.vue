@@ -36,8 +36,8 @@
   const formatDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 
   const displayDate = computed(() => formatDate(date.value))
-  // github pages는 public 경로가 루트임
-  const imgSrc = computed(() => `/${displayDate.value}.jpg`)
+  // github pages는 base 경로가 /foodCheckMenu/ 이므로 BASE_URL 사용
+  const imgSrc = computed(() => `${import.meta.env.BASE_URL}${displayDate.value}.jpg`)
 
   const imgExists = ref(false)
   function checkImgExists () {
