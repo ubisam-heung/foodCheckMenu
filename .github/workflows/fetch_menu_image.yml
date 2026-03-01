@@ -2,7 +2,7 @@ name: Fetch and Save Menu Image
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 매일 오전 9시(한국) = 0시(UTC)
+    - cron: '7 0 * * *' # 매일 오전 9시 7분(한국) = 0시(UTC)
   workflow_dispatch:
 
 jobs:
