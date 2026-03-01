@@ -2,7 +2,7 @@ name: Fetch and Save Menu Image
 
 on:
   schedule:
-    - cron: '7 0 * * *' # 매일 오전 9시 7분(한국) = 0시(UTC)
+    - cron: '7 0 * * *' # 매일 오전 9시(한국) = 0시(UTC)
   workflow_dispatch:
 
 jobs:
@@ -10,19 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
+      - name: Debug time
+        run: |
+          echo "===== DEBUG TIME ====="
+          echo "UTC now: $(date -u)"
+          echo "KST now: $(TZ=Asia/Seoul date)"
+          echo "======================"
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install selenium requests webdriver-manager
+
       - name: Fetch menu image
         run: python fetch_menu_image.py
+
       - name: Commit and push image
         run: |
           git config --global user.name 'github-actions[bot]'
