@@ -37,10 +37,13 @@ RESTAURANTS = [
 def get_thumbs(driver, restaurant):
     driver.get(restaurant['url'])
     time.sleep(restaurant['wait'])
-    return [
+    thumbs = [
         {'src': img.get_attribute('src'), 'alt': img.get_attribute('alt') or ''}
         for img in driver.find_elements(By.CSS_SELECTOR, restaurant['selector'])
     ]
+    # 진단용: 접속한 최종 URL, 페이지 제목, 찾은 이미지 수
+    print(f"[{restaurant['name']}] url={driver.current_url} title={driver.title!r} imgs={len(thumbs)}")
+    return thumbs
 
 
 def fetch_one(driver, restaurant):
@@ -81,9 +84,9 @@ def main(pending):
 
 if __name__ == "__main__":
     pending = RESTAURANTS
-    for i in range(7):  # 5분 간격 7회
+    for i in range(3):  # 1분 간격 3회
         pending = main(pending)
         if not pending:
             break
-        if i < 6:
-            time.sleep(300)  # 5분 대기
+        if i < 2:
+            time.sleep(60)  # 1분 대기
