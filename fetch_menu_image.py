@@ -20,31 +20,31 @@ def pick_first_restaurant(thumbs):
 
 
 def pick_second_restaurant(thumbs):
-    """2층식당: 프로필 이미지(원본 img_xl)가 그날의 메뉴 이미지."""
-    for t in thumbs:
-        if t['alt'] == '프로필이미지' and 'thumb/' not in t['src']:
-            return t['src']
-    return None
+    """2층식당(인스타그램): 가장 최근 게시물 이미지가 오늘의 메뉴."""
+    srcs = [t['src'] for t in thumbs if t['src']]
+    return srcs[0] if srcs else None
 
 
-# 이름, 페이지 URL, 이미지 선택 함수, 저장 폴더 (식당 1은 기존 경로 유지)
+# 이름, 페이지 URL, 이미지 선택자, 이미지 선택 함수, 저장 폴더, 로딩 대기(초) (지하1층식당은 기존 경로 유지)
 RESTAURANTS = [
-    {'name': 'restaurant1', 'url': MENU_PAGE_URL, 'pick': pick_first_restaurant, 'dir': 'public'},
-    {'name': 'restaurant2', 'url': MENU2_PAGE_URL, 'pick': pick_second_restaurant, 'dir': 'public/r2'},
+    {'name': 'restaurant1', 'url': MENU_PAGE_URL, 'selector': 'img.img_thumb',
+     'pick': pick_first_restaurant, 'dir': 'public', 'wait': 2},
+    {'name': 'restaurant2', 'url': MENU2_PAGE_URL, 'selector': 'a[href*="/p/"] img',
+     'pick': pick_second_restaurant, 'dir': 'public/r2', 'wait': 5},
 ]
 
 
-def get_thumbs(driver, url):
-    driver.get(url)
-    time.sleep(2)
+def get_thumbs(driver, restaurant):
+    driver.get(restaurant['url'])
+    time.sleep(restaurant['wait'])
     return [
         {'src': img.get_attribute('src'), 'alt': img.get_attribute('alt') or ''}
-        for img in driver.find_elements(By.CSS_SELECTOR, 'img.img_thumb')
+        for img in driver.find_elements(By.CSS_SELECTOR, restaurant['selector'])
     ]
 
 
 def fetch_one(driver, restaurant):
-    thumbs = get_thumbs(driver, restaurant['url'])
+    thumbs = get_thumbs(driver, restaurant)
     img_url = restaurant['pick'](thumbs)
     if not img_url:
         print(f"[{restaurant['name']}] 원본 이미지 URL을 찾을 수 없습니다.")
