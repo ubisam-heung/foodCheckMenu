@@ -20,17 +20,19 @@ def pick_first_restaurant(thumbs):
 
 
 def pick_second_restaurant(thumbs):
-    """2층식당(인스타그램): 가장 최근 게시물 이미지가 오늘의 메뉴."""
-    srcs = [t['src'] for t in thumbs if t['src']]
-    return srcs[0] if srcs else None
+    """2층식당(카카오 채널): 프로필 원본 이미지(img_xl)가 그날의 메뉴 이미지."""
+    for t in thumbs:
+        if t['alt'] == '프로필이미지' and 'thumb/' not in t['src']:
+            return t['src']
+    return None
 
 
 # 이름, 페이지 URL, 이미지 선택자, 이미지 선택 함수, 저장 폴더, 로딩 대기(초) (지하1층식당은 기존 경로 유지)
 RESTAURANTS = [
     {'name': 'restaurant1', 'url': MENU_PAGE_URL, 'selector': 'img.img_thumb',
      'pick': pick_first_restaurant, 'dir': 'public', 'wait': 2},
-    {'name': 'restaurant2', 'url': MENU2_PAGE_URL, 'selector': 'a[href*="/p/"] img',
-     'pick': pick_second_restaurant, 'dir': 'public/r2', 'wait': 5},
+    {'name': 'restaurant2', 'url': MENU2_PAGE_URL, 'selector': 'img.img_thumb',
+     'pick': pick_second_restaurant, 'dir': 'public/r2', 'wait': 2},
 ]
 
 
