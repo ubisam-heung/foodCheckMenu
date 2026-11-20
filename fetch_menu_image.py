@@ -7,12 +7,12 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-# config_secret.py에서 민감 정보 import (식당 1)
+# config_secret.py에서 민감 정보 import 
 from config_secret import MENU_PAGE_URL, MENU2_PAGE_URL, IMG_DOMAIN_FILTER
 
 
 def pick_first_restaurant(thumbs):
-    """식당 1: 도메인 필터 후 두 번째 이미지(없으면 첫 번째)."""
+    """지하1층식당: 도메인 필터 후 두 번째 이미지(없으면 첫 번째)."""
     filtered = [t['src'] for t in thumbs if IMG_DOMAIN_FILTER in t['src']]
     if len(filtered) >= 2:
         return filtered[1]
@@ -20,9 +20,11 @@ def pick_first_restaurant(thumbs):
 
 
 def pick_second_restaurant(thumbs):
-    """식당 2: 프로필 이미지를 제외한 가장 최신(첫 번째) 게시물 이미지."""
-    posts = [t['src'] for t in thumbs if t['alt'] != '프로필이미지' and t['src']]
-    return posts[0] if posts else None
+    """2층식당: 프로필 이미지(원본 img_xl)가 그날의 메뉴 이미지."""
+    for t in thumbs:
+        if t['alt'] == '프로필이미지' and 'thumb/' not in t['src']:
+            return t['src']
+    return None
 
 
 # 이름, 페이지 URL, 이미지 선택 함수, 저장 폴더 (식당 1은 기존 경로 유지)
