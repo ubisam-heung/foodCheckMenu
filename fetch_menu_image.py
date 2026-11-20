@@ -1,4 +1,4 @@
-
+import os
 import time
 import datetime
 import requests
@@ -7,47 +7,81 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-# config_secret.py에서 민감 정보 import
-from config_secret import MENU_PAGE_URL, IMG_DOMAIN_FILTER
+# config_secret.py에서 민감 정보 import (식당 1)
+from config_secret import MENU_PAGE_URL, MENU2_PAGE_URL, IMG_DOMAIN_FILTER
 
-def get_img_srcs(url):
+
+def pick_first_restaurant(thumbs):
+    """식당 1: 도메인 필터 후 두 번째 이미지(없으면 첫 번째)."""
+    filtered = [t['src'] for t in thumbs if IMG_DOMAIN_FILTER in t['src']]
+    if len(filtered) >= 2:
+        return filtered[1]
+    return filtered[0] if filtered else None
+
+
+def pick_second_restaurant(thumbs):
+    """식당 2: 프로필 이미지를 제외한 가장 최신(첫 번째) 게시물 이미지."""
+    posts = [t['src'] for t in thumbs if t['alt'] != '프로필이미지' and t['src']]
+    return posts[0] if posts else None
+
+
+# 이름, 페이지 URL, 이미지 선택 함수, 저장 폴더 (식당 1은 기존 경로 유지)
+RESTAURANTS = [
+    {'name': 'restaurant1', 'url': MENU_PAGE_URL, 'pick': pick_first_restaurant, 'dir': 'public'},
+    {'name': 'restaurant2', 'url': MENU2_PAGE_URL, 'pick': pick_second_restaurant, 'dir': 'public/r2'},
+]
+
+
+def get_thumbs(driver, url):
+    driver.get(url)
+    time.sleep(2)
+    return [
+        {'src': img.get_attribute('src'), 'alt': img.get_attribute('alt') or ''}
+        for img in driver.find_elements(By.CSS_SELECTOR, 'img.img_thumb')
+    ]
+
+
+def fetch_one(driver, restaurant):
+    thumbs = get_thumbs(driver, restaurant['url'])
+    img_url = restaurant['pick'](thumbs)
+    if not img_url:
+        print(f"[{restaurant['name']}] 원본 이미지 URL을 찾을 수 없습니다.")
+        return False
+    os.makedirs(restaurant['dir'], exist_ok=True)
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    img_filename = f"{restaurant['dir']}/{today_str}.jpg"
+    response = requests.get(img_url)
+    response.raise_for_status()
+    with open(img_filename, "wb") as img_file:
+        img_file.write(response.content)
+    print(f"[{restaurant['name']}] 이미지가 {img_filename}로 저장되었습니다.")
+    return True
+
+
+def main(pending):
+    """pending 식당들을 처리하고, 실패한 식당 목록을 반환."""
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    driver.get(url)
-    time.sleep(2)
-    img_elements = driver.find_elements(By.CSS_SELECTOR, 'img.img_thumb')
-    src_list = [img.get_attribute('src') for img in img_elements]
-    driver.quit()
-    return src_list
+    failed = []
+    try:
+        for restaurant in pending:
+            try:
+                if not fetch_one(driver, restaurant):
+                    failed.append(restaurant)
+            except Exception as e:
+                print(f"[{restaurant['name']}] 실패: {e}")
+                failed.append(restaurant)
+    finally:
+        driver.quit()
+    return failed
 
-def main():
-    srcs = get_img_srcs(MENU_PAGE_URL)
-    filtered = [src for src in srcs if IMG_DOMAIN_FILTER in src]
-    img_url = None
-    if len(filtered) >= 2:
-        img_url = filtered[1]
-    elif filtered:
-        img_url = filtered[0]
-    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    img_filename = f"public/{today_str}.jpg"
-    if img_url:
-        response = requests.get(img_url)
-        img_bytes = response.content
-        with open(img_filename, "wb") as img_file:
-            img_file.write(img_bytes)
-        print(f"이미지가 {img_filename}로 저장되었습니다.")
-        return True
-    else:
-        print("원본 이미지 URL을 찾을 수 없습니다.")
-        return False
 
 if __name__ == "__main__":
-    for i in range(7):  # 9:00~9:30까지 5분 간격 7회
-        try:
-            if main():
-                break
-        except Exception as e:
-            print(f"실패: {e}")
-            if i < 6:
-                time.sleep(300)  # 5분 대기
+    pending = RESTAURANTS
+    for i in range(7):  # 5분 간격 7회
+        pending = main(pending)
+        if not pending:
+            break
+        if i < 6:
+            time.sleep(300)  # 5분 대기

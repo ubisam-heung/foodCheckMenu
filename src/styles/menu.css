@@ -120,6 +120,27 @@ html, body, #app {
 .nav-btn:hover {
   background: #ffb4a2;
 }
+.menu-list {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+}
+.menu-col {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+.restaurant-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  color: #22223b;
+  margin: 0 0 0.5rem;
+}
  .img-wrap {
    width: 100%;
    max-width: 600px;
@@ -134,8 +155,11 @@ html, body, #app {
    overflow: hidden;
  }
 @media (max-width: 600px) {
+  .menu-list {
+    gap: 0.4rem;
+  }
   .img-wrap {
-    max-width: 90vw;
+    max-width: none;
     height: 50vh;
   }
 }
