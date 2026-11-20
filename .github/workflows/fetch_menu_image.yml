@@ -40,7 +40,7 @@ jobs:
           echo "MENU2_PAGE_URL = '${{ secrets.MENU2_PAGE_URL }}'" >> config_secret.py
 
       - name: Fetch menu image
-        run: python fetch_menu_image.py
+        run: python -u fetch_menu_image.py
 
       - name: Commit and push image
         run: |
